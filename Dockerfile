@@ -6,7 +6,7 @@ RUN apk add --no-cache \
     certbot-nginx \
     openssl
 
-RUN mkdir -p /etc/letsencryt
+RUN mkdir -p /etc/letsencrypt
 
 EXPOSE 80 443
 

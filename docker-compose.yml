@@ -13,7 +13,6 @@ services:
             - "80:80"
         volumes:
             - nginx_logs:/var/log/nginx
-            - nginx_cache:/var/cache/nginx
             - ./nginx.conf:/etc/nginx/nginx.conf:ro
             - ./conf.d:/etc/nginx/conf.d:ro
             - nginx_tmp:/tmp/nginx
@@ -21,22 +20,14 @@ services:
             - nginx_network
         healthcheck:
             test: 
-                [
-                    "CMD", 
-                    "wget",  
-                    "--quiet", 
-                    "--tries=1", 
-                    "--spider", 
-                    "http://localhost:80/"
-                ]
+                [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health" ]
             interval: 30s
             timeout: 5s
             retries: 3
             start_period: 30s
-        read_only: true
         tmpfs:
             - /var/run:mode=0755
-            - /var/cache/nginx:mode-0755
+            - /var/cache/nginx:mode=0755
 
     cloudflared:
         image: cloudflare/cloudflared:latest

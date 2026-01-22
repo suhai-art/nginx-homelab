@@ -8,17 +8,35 @@ services:
         container_name: nginx
         restart: unless-stopped
         environment:
-            - TZ=America/Sao_Paulo
+            - TZ=${TZ}
         ports:
             - "80:80"
-            - "443:443"
         volumes:
             - nginx_logs:/var/log/nginx
+            - nginx_cache:/var/cache/nginx
             - ./nginx.conf:/etc/nginx/nginx.conf:ro
-            - ./conf.d:/etc/nginx/conf.d
-            - ./letsencrypt:/etc/letsencrypt
+            - ./conf.d:/etc/nginx/conf.d:ro
+            - nginx_tmp:/tmp/nginx
         networks:
             - nginx_network
+        healthcheck:
+            test: 
+            [
+                "CMD", 
+                "wget",  
+                "--quiet", 
+                "--tries=1", 
+                "--spider", 
+                "http://localhost:80/"
+            ]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 30s
+        read_only: true
+        tmpfs:
+            - /var/run:mode=0755
+            - /var/cache/nginx:mode-0755
 
     cloudflared:
         image: cloudflare/cloudflared:latest
@@ -26,13 +44,14 @@ services:
         restart: unless-stopped
         command: tunnel --no-autoupdate run --protocol http2
         environment:
-            - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+            - TUNNEL_TOKEN=${TUNNEL_TOKEN:?TUNNEL_TOKEN is not defined}
             - TUNNEL_LOGLEVEL=info
             - TUNNEL_TRANSPORT_LOGLEVEL=warn
         networks:
             - nginx_network
         depends_on:
-            - nginx
+            nginx:
+                condition: service_healthy
         healthcheck:
             test:
                 [
@@ -42,11 +61,24 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3
+            start_period: 15s
+        cap_drop:
+            - ALL
+        read_only: true
+        tmpfs:
+            - /tmp:mode=0755
 
 volumes:
     nginx_logs:
+        driver: local
+    nginx_cache:
+        driver: local
+    nginx_tmp:
         driver: local
 
 networks:
     nginx_network:
         driver: bridge
+        ipam:
+            config:
+              - subnet: 172.20.0.0/24

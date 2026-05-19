@@ -17,6 +17,7 @@ services:
             - ./conf.d:/etc/nginx/conf.d:ro
             - nginx_tmp:/tmp/nginx
             - ./apps/front-end:/var/www/front-end:ro
+            - ./apps/vita-rescue:/var/www/vita-rescue:ro
         networks:
             - nginx_network
         healthcheck:

@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Deploy
         run: |
-          cd /srv/apps/nginx-homelab
+          cd /srv/workspace
 
           git fetch origin
           git reset --hard origin/main

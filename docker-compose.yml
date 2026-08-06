@@ -27,6 +27,8 @@ services:
             timeout: 5s
             retries: 3
             start_period: 30s
+        dns:
+            - ${DNS_IP}
         tmpfs:
             - /var/run:mode=0755
             - /var/cache/nginx:mode=0755
